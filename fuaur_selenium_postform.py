@@ -8,7 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 url = "https://alegerilibere.ro/"
-exclude_numbers = ["327003"]  # Array of substrings to exclude
+exclude_numbers = ["327003"]
 
 # Arrays of Romanian names
 FirstName = [
