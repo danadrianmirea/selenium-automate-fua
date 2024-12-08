@@ -10,6 +10,9 @@ from selenium.webdriver.support import expected_conditions as EC
 url = "https://alegerilibere.ro/"
 exclude_numbers = ["327003"]
 
+minSleepInterval = 1
+maxSleepInterval = 2
+
 # Arrays of Romanian names
 FirstName = [
     "Andrei", "Mihai", "Ion", "Cristian", "Alexandru", "Gabriel", "Vlad", "Daniel", "Ștefan", "Florin",
@@ -62,6 +65,8 @@ def safe_find_element(driver, by, value):
 driver = webdriver.Chrome()
 driver.get(url)
 
+
+
 try:
     while True:
         # First step
@@ -81,7 +86,7 @@ try:
         continue_button_xpath = "//button[contains(@onclick, 'MultistageForm.CollectAndAdvance')]"
         safe_click(driver, continue_button_xpath)
 
-        time.sleep(random.uniform(1, 3))
+        #time.sleep(random.uniform(minSleepInterval, maxSleepInterval))
 
         # Second step
         accept_checkbox = safe_find_element(driver, By.ID, "accept")
@@ -106,11 +111,14 @@ try:
         sign_button_xpath = "//button[contains(@onclick, 'MultistageForm.CollectAndAdvance')]"
         safe_click(driver, sign_button_xpath)
 
-        time.sleep(random.uniform(1, 3))
+        #time.sleep(random.uniform(minSleepInterval, maxSleepInterval))
 
-        # Restart the process
+        # Perform cleanup and restart the process
+        driver.delete_all_cookies()
+        driver.execute_script("window.localStorage.clear();")
+        driver.execute_script("window.sessionStorage.clear();")
+        driver.get("about:blank")
         driver.get(url)
-        time.sleep(random.uniform(1, 3))
 
 except Exception as e:
     print(f"Error: {e}")
