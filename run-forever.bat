@@ -1,0 +1,6 @@
+@echo off
+:loop
+echo Starting Python script...
+python fuaur_selenium_postform.py
+echo Python script exited. Restarting...
+goto loop
