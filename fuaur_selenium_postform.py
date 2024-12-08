@@ -62,13 +62,29 @@ def safe_find_element(driver, by, value):
     wait = WebDriverWait(driver, 10)
     return wait.until(EC.presence_of_element_located((by, value)))
 
+def PrintStats(start_time, last_log_time, total_iterations, iterations_in_last_interval, stat_log_time):
+    current_time = time.time()
+    if current_time - last_log_time >= stat_log_time:
+        total_execution_time = current_time - start_time
+        print(f"Total execution time: {total_execution_time:.2f} seconds, "
+              f"Total number of iterations: {total_iterations}, "
+              f"Iterations in the past {stat_log_time} seconds: {iterations_in_last_interval}")
+        return current_time, 0  # Reset `last_log_time` and `iterations_in_last_interval`
+    return last_log_time, iterations_in_last_interval  # No reset
+
+# Init
 driver = webdriver.Chrome()
 driver.get(url)
 
-
+# Stat logging variables
+stat_log_time = 30
+total_iterations = 0
+last_log_time = time.time()
+start_time = last_log_time
+iterations_in_last_interval = 0
 
 try:
-    while True:
+    while True:        
         # First step
         first_name = random.choice(FirstName)
         last_name = random.choice(LastName)
@@ -111,7 +127,7 @@ try:
         sign_button_xpath = "//button[contains(@onclick, 'MultistageForm.CollectAndAdvance')]"
         safe_click(driver, sign_button_xpath)
 
-        #time.sleep(random.uniform(minSleepInterval, maxSleepInterval))
+        time.sleep(random.uniform(minSleepInterval, maxSleepInterval))
 
         # Perform cleanup and restart the process
         driver.delete_all_cookies()
@@ -119,6 +135,12 @@ try:
         driver.execute_script("window.sessionStorage.clear();")
         driver.get("about:blank")
         driver.get(url)
+        
+        # Print statistics
+        total_iterations += 1
+        iterations_in_last_interval += 1
+        last_log_time, iterations_in_last_interval = PrintStats(start_time, last_log_time, total_iterations,  iterations_in_last_interval, stat_log_time)
+
 
 except Exception as e:
     print(f"Error: {e}")
