@@ -5,10 +5,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 
 url = "https://alegerilibere.ro/"
 exclude_numbers = ["327003"]
+
+minSleepInterval = 0.1
+maxSleepInterval = 0.2
 
 # Arrays of Romanian names
 FirstName = [
@@ -35,15 +39,12 @@ LastName = [
     "Bărbulescu", "Petrică", "Tudose", "Manea", "Șoarec", "Pașcu", "Chirilă", "Săvescu", "Mitrea", "Borcea"
 ]
 
-# Function to generate random phone numbers
 def generate_random_phone():
     while True:
         phone = "07" + "".join(str(random.randint(0, 9)) for _ in range(8))
-        # Check if any excluded number is in the generated phone
         if not any(exclude in phone for exclude in exclude_numbers):
             return phone
 
-# Function to safely interact with elements
 def safe_click(driver, xpath):
     try:
         wait = WebDriverWait(driver, 10)
@@ -62,67 +63,91 @@ def safe_find_element(driver, by, value):
     wait = WebDriverWait(driver, 10)
     return wait.until(EC.presence_of_element_located((by, value)))
 
-# Start Selenium WebDriver
-driver = webdriver.Chrome()  # Replace with the path to your ChromeDriver if necessary
+def PrintStats(start_time, last_log_time, total_iterations, iterations_in_last_interval, stat_log_time):
+    current_time = time.time()
+    if current_time - last_log_time >= stat_log_time:
+        total_execution_time = current_time - start_time
+        print(f"Total execution time: {total_execution_time:.2f} seconds, "
+              f"Total number of iterations: {total_iterations}, "
+              f"Iterations in the past {stat_log_time} seconds: {iterations_in_last_interval}")
+        return current_time, 0  # Reset `last_log_time` and `iterations_in_last_interval`
+    return last_log_time, iterations_in_last_interval  # No reset
+
+# Init
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-gpu")
+driver = webdriver.Chrome(options=chrome_options)
 driver.get(url)
 
+# Stat logging variables
+stat_log_time = 30
+total_iterations = 0
+last_log_time = time.time()
+start_time = last_log_time
+iterations_in_last_interval = 0
+
+print("Starting script")
+
 try:
-    while True:
+    while True:        
         # First step
         first_name = random.choice(FirstName)
         last_name = random.choice(LastName)
         full_name = f"{first_name} {last_name}"
         phone = generate_random_phone()
 
-        # Fill "nume"
         nume_input = safe_find_element(driver, By.ID, "nume")
         nume_input.clear()
         nume_input.send_keys(full_name)
 
-        # Fill "phone"
         phone_input = safe_find_element(driver, By.ID, "phone")
         phone_input.clear()
         phone_input.send_keys(phone)
 
-        # Click the "Continuă" button
         continue_button_xpath = "//button[contains(@onclick, 'MultistageForm.CollectAndAdvance')]"
         safe_click(driver, continue_button_xpath)
 
-        # Wait for the second step to load
-        time.sleep(random.uniform(1, 3))
+        #time.sleep(random.uniform(minSleepInterval, maxSleepInterval))
 
         # Second step
         accept_checkbox = safe_find_element(driver, By.ID, "accept")
         accept_checkbox.click()
 
-        # Select random "judet"
         judet_select = Select(safe_find_element(driver, By.NAME, "judet"))
         judet_options = judet_select.options
-        random_judet = random.choice(judet_options[1:])  # Exclude the first placeholder option
+        random_judet = random.choice(judet_options[1:])
         judet_select.select_by_visible_text(random_judet.text)
-
-        # Select random "uat"
+        
         uat_select = Select(safe_find_element(driver, By.NAME, "uat"))
         uat_options = uat_select.options
-        random_uat = random.choice(uat_options[1:])  # Exclude the first placeholder option
-        uat_select.select_by_visible_text(random_uat.text)        
+        random_uat = random.choice(uat_options[1:])
+        uat_select.select_by_visible_text(random_uat.text)
 
-        # Select random "localitate"
         localitate_select = Select(safe_find_element(driver, By.NAME, "localitate"))
         localitate_options = localitate_select.options
-        random_localitate = random.choice(localitate_options[1:])  # Exclude the first placeholder option
+        random_localitate = random.choice(localitate_options[1:])
         localitate_select.select_by_visible_text(random_localitate.text)
 
-        # Click the "Semnează" button
+        # Submit form
         sign_button_xpath = "//button[contains(@onclick, 'MultistageForm.CollectAndAdvance')]"
         safe_click(driver, sign_button_xpath)
 
-        # Wait for a random time between 1s and 3s
-        time.sleep(random.uniform(1, 3))
+        print(f"Submitted data for: {full_name}, {phone}, {random_judet.text}, {random_uat.text}, {random_localitate.text}")
+        time.sleep(random.uniform(minSleepInterval, maxSleepInterval))
 
-        # Restart the process
+        # Perform cleanup and restart the process
+        driver.delete_all_cookies()
+        driver.execute_script("window.localStorage.clear();")
+        driver.execute_script("window.sessionStorage.clear();")
+        driver.get("about:blank")
         driver.get(url)
-        time.sleep(random.uniform(1, 3))
+        
+        # Print statistics
+        total_iterations += 1
+        iterations_in_last_interval += 1
+        last_log_time, iterations_in_last_interval = PrintStats(start_time, last_log_time, total_iterations,  iterations_in_last_interval, stat_log_time)
+
 
 except Exception as e:
     print(f"Error: {e}")
