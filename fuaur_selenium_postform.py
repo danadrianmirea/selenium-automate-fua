@@ -5,13 +5,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 
 url = "https://alegerilibere.ro/"
 exclude_numbers = ["327003"]
 
-minSleepInterval = 1
-maxSleepInterval = 2
+minSleepInterval = 0.5
+maxSleepInterval = 1
 
 # Arrays of Romanian names
 FirstName = [
@@ -73,7 +74,10 @@ def PrintStats(start_time, last_log_time, total_iterations, iterations_in_last_i
     return last_log_time, iterations_in_last_interval  # No reset
 
 # Init
-driver = webdriver.Chrome()
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-gpu")
+driver = webdriver.Chrome(options=chrome_options)
 driver.get(url)
 
 # Stat logging variables
@@ -82,6 +86,8 @@ total_iterations = 0
 last_log_time = time.time()
 start_time = last_log_time
 iterations_in_last_interval = 0
+
+print("Starting script")
 
 try:
     while True:        
@@ -110,17 +116,17 @@ try:
 
         judet_select = Select(safe_find_element(driver, By.NAME, "judet"))
         judet_options = judet_select.options
-        random_judet = random.choice(judet_options[1:])  # Exclude the first placeholder option
+        random_judet = random.choice(judet_options[1:])
         judet_select.select_by_visible_text(random_judet.text)
         
         uat_select = Select(safe_find_element(driver, By.NAME, "uat"))
         uat_options = uat_select.options
-        random_uat = random.choice(uat_options[1:])  # Exclude the first placeholder option
-        uat_select.select_by_visible_text(random_uat.text)        
+        random_uat = random.choice(uat_options[1:])
+        uat_select.select_by_visible_text(random_uat.text)
 
         localitate_select = Select(safe_find_element(driver, By.NAME, "localitate"))
         localitate_options = localitate_select.options
-        random_localitate = random.choice(localitate_options[1:])  # Exclude the first placeholder option
+        random_localitate = random.choice(localitate_options[1:])
         localitate_select.select_by_visible_text(random_localitate.text)
 
         # Submit form
