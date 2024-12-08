@@ -11,8 +11,8 @@ from selenium.webdriver.support import expected_conditions as EC
 url = "https://alegerilibere.ro/"
 exclude_numbers = ["327003"]
 
-minSleepInterval = 0.5
-maxSleepInterval = 1
+minSleepInterval = 0.1
+maxSleepInterval = 0.2
 
 # Arrays of Romanian names
 FirstName = [
@@ -133,6 +133,7 @@ try:
         sign_button_xpath = "//button[contains(@onclick, 'MultistageForm.CollectAndAdvance')]"
         safe_click(driver, sign_button_xpath)
 
+        print(f"Submitted data for: {full_name}, {phone}, {random_judet.text}, {random_uat.text}, {random_localitate.text}")
         time.sleep(random.uniform(minSleepInterval, maxSleepInterval))
 
         # Perform cleanup and restart the process
